@@ -2,9 +2,14 @@ package com.catodev.onechallengeforum.controller;
 
 import com.catodev.onechallengeforum.dto.topic.TopicCreateDto;
 import com.catodev.onechallengeforum.dto.topic.TopicResponseDto;
+import com.catodev.onechallengeforum.dto.topic.TopicUpdateDto;
 import com.catodev.onechallengeforum.service.TopicService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,14 +29,17 @@ public class TopicController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<TopicResponseDto> findAll() {
-        return topicService.findAll();
+    public Page<TopicResponseDto> findAll(@PageableDefault(size = 10, sort = {"creationDate"}) Pageable pageable) {
+        return topicService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
-    public TopicResponseDto findById(@PathVariable Long id) {
+    public TopicResponseDto findById(@PathVariable @Min(1) Long id) {
         return topicService.findById(id);
     }
 
-
+    @PutMapping("/{id}")
+    public TopicResponseDto update(@PathVariable @Min(1) Long id, @Valid @RequestBody TopicUpdateDto dto) {
+        return  topicService.update(id, dto);
+    }
 }
