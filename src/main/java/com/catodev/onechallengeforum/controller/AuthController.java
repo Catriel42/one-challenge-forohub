@@ -1,5 +1,7 @@
 package com.catodev.onechallengeforum.controller;
 
+import com.catodev.onechallengeforum.dto.auth.JwtTokenDto;
+import com.catodev.onechallengeforum.dto.auth.LoginUserDto;
 import com.catodev.onechallengeforum.dto.auth.RegisterUserDto;
 import com.catodev.onechallengeforum.service.auth.AuthenticationService;
 import jakarta.validation.Valid;
@@ -22,5 +24,11 @@ public class AuthController {
     public ResponseEntity<Void> register(@RequestBody @Valid RegisterUserDto dto) {
         authenticationService.register(dto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<JwtTokenDto> login(@RequestBody @Valid LoginUserDto dto) {
+        JwtTokenDto token = authenticationService.login(dto);
+        return ResponseEntity.ok(token);
     }
 }
