@@ -1,138 +1,79 @@
-# Documentación - Proyecto Spring Boot
+# One Challenge Forum - API REST
 
-## Requisitos Previos
+![Java](https://img.shields.io/badge/Java_25-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot_4-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
+![Postgres](https://img.shields.io/badge/Postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![Flyway](https://img.shields.io/badge/Flyway-%23CC0200.svg?style=for-the-badge&logo=flyway&logoColor=white)
+![Spring Security](https://img.shields.io/badge/Spring_Security-%236DB33F.svg?style=for-the-badge&logo=springsecurity&logoColor=white)
 
-- Java 25
-- Maven instalado
-- Base de datos PostgreSQL (Supabase)
+Este proyecto es una solucion backend para el desafio "Foro Hub" de Oracle Next Education (ONE) y Alura. Consiste en una API RESTful desarrollada con **Spring Boot** para gestionar topicos de discusion, implementando las mejores practicas de desarrollo, persistencia de datos y seguridad.
 
-## Configuración Inicial
+## Tecnologias
 
-### 1. Clonar el Repositorio
+*   **Java 25** (Compatible con versiones LTS recientes como 21)
+*   **Spring Boot 4**
+*   **Spring Data JPA** (Hibernate)
+*   **PostgreSQL** (Base de datos)
+*   **Flyway** (Migraciones de base de datos)
+*   **Spring Security** (Autenticacion y Autorizacion)
+*   **Lombok** (Reduccion de boilerplate)
+*   **MapStruct** (Mapeo eficiente de Entidades <-> DTOs)
+*   **Validation** (Bean Validation estandar)
 
-```bash
-git clone <url-del-repositorio>
-cd one-challenge-forohub
-```
+## Configuracion del Entorno
 
-### 2. Configurar Variables de Entorno
+Para ejecutar la aplicacion, es necesario configurar las siguientes **variables de entorno** en tu sistema o IDE. Estas variables son utilizadas por el perfil de desarrollo (`dev`).
 
-Crear archivo `.env` en la raíz del proyecto:
+| Variable | Descripcion | Ejemplo |
+| :--- | :--- | :--- |
+| `DEV_DB_URL` | URL de conexion a PostgreSQL | `jdbc:postgresql://localhost:5432/foro_hub` |
+| `DEV_DB_USERNAME` | Usuario de la base de datos | `postgres` |
+| `DEV_DB_PASSWORD` | Contrasena del usuario | `admin123` |
 
-```bash
-SPRING_PROFILES_ACTIVE=dev
-DEV_DB_URL=jdbc:postgresql://tu-host.supabase.com:5432/postgres
-DEV_DB_USERNAME=tu-usuario
-DEV_DB_PASSWORD=tu-password
-PROD_DB_URL=jdbc:postgresql://tu-host-prod.supabase.com:5432/postgres
-PROD_DB_USERNAME=tu-usuario-prod
-PROD_DB_PASSWORD=tu-password-prod
-```
+> **Nota:** La aplicacion utiliza Flyway, por lo que las tablas se crearan automaticamente al iniciar si la base de datos existe.
 
-**Importante:** Nunca subir el archivo `.env` a Git.
+## Como Ejecutar
 
-### 3. Cargar Variables de Entorno
-
-```bash
-export $(cat .env | xargs)
-```
-
-### 4. Verificar Variables
+### Usando Maven
+Puedes ejecutar la aplicacion directamente desde la terminal con Maven:
 
 ```bash
-echo $SPRING_PROFILES_ACTIVE
-echo $DEV_DB_URL
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-## Ejecutar el Proyecto
-
-### Modo Desarrollo
+### Usando JAR
+Si prefieres empaquetar y ejecutar:
 
 ```bash
-./mvnw spring-boot:run
+./mvnw clean package
+java -jar target/one-challenge-forum-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev
 ```
 
-### Modo Producción
+## Endpoints Principales
 
-```bash
-export SPRING_PROFILES_ACTIVE=prod
-./mvnw spring-boot:run
-```
+La API expone los siguientes recursos bajo el path base `/topics` (o configurado en properties).
 
-## Estructura del Proyecto
+| Metodo | Endpoint | Descripcion |
+| :--- | :--- | :--- |
+| **POST** | `/topics` | **Crear Topico**. Requiere titulo, mensaje, autor y curso. Valida duplicados. |
+| **GET** | `/topics` | **Listar Topicos**. Retorna lista paginada de topicos activos. Filtra los eliminados. |
+| **GET** | `/topics/{id}` | **Detalle Topico**. Obtiene la informacion completa de un topico por su ID. |
+| **PUT** | `/topics/{id}` | **Actualizar Topico**. Actualiza titulo o mensaje. Transaccional. |
+| **DELETE** | `/topics/{id}` | **Eliminar Topico (Logico)**. Cambia el estado a `DELETED`. |
 
-```
-src/
-├── main/
-│   ├── java/
-│   │   └── com/catodev/onechallengeforum/
-│   │       └── OneChallengeForumApplication.java
-│   └── resources/
-│       ├── application.properties
-│       ├── application-dev.properties
-│       ├── application-prod.properties
-│       └── db/
-│           └── migration/
-│               └── V1__create_tables.sql
-```
+## Caracteristicas Clave
 
-## Profiles
+*   **Soft Delete**: Los registros no se borran fisicamente de la base de datos; cambian su estado a `DELETED` para mantener integridad referencial y auditoria.
+*   **Validaciones**:
+    *   **Formato**: `DTO` con `@NotBlank`, `@NotNull`.
+    *   **Negocio**: Reglas de unicidad (no duplicados) validadas en la capa de Servicio.
+*   **Transaccionalidad**: Uso de `@Transactional` para garantizar atomicidad en operaciones de modificacion (`create`, `update`, `delete`).
+*   **Mappers**: Conversion limpia entre DTOs y Entidades usando MapStruct.
 
-El proyecto usa Spring Profiles para separar configuraciones:
+## Contribucion
 
-- **dev**: Desarrollo local
-- **prod**: Producción
-
-Activar profile:
-```bash
-export SPRING_PROFILES_ACTIVE=dev
-```
-
-## Migraciones de Base de Datos
-
-Flyway ejecuta automáticamente las migraciones al iniciar la aplicación.
-
-Ubicación de scripts: `src/main/resources/db/migration/`
-
-Nomenclatura: `V{número}__{descripción}.sql`
-
-Ejemplo: `V1__create_tables.sql`
-
-## Solución de Problemas
-
-### Error: "Failed to determine a suitable driver class"
-
-Verificar que el driver de PostgreSQL esté en `pom.xml`:
-
-```xml
-<dependency>
-    <groupId>org.postgresql</groupId>
-    <artifactId>postgresql</artifactId>
-    <scope>runtime</scope>
-</dependency>
-```
-
-### Error: "relation already exists"
-
-Las tablas ya existen en la base de datos. Opciones:
-
-1. Limpiar la base de datos manualmente
-2. Usar `CREATE TABLE IF NOT EXISTS` en migraciones
-
-### Variables de entorno no se cargan
-
-```bash
-# Recargar variables
-export $(cat .env | xargs)
-
-# Verificar
-echo $SPRING_PROFILES_ACTIVE
-```
-
-## Endpoints
-
-La aplicación corre en: `http://localhost:8080`
-
-## Detener la Aplicación
-
-Presionar `Ctrl + C` en la terminal donde corre la aplicación.
+Este proyecto sigue la convencion de **Conventional Commits** para el historial de cambios:
+*   `feat`: Nueva funcionalidad.
+*   `fix`: Correccion de errores.
+*   `refactor`: Cambios de codigo que no alteran la funcionalidad.
+*   `docs`: Cambios en documentacion.
