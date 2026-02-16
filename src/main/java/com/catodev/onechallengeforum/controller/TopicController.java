@@ -13,8 +13,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/topics")
 @AllArgsConstructor
@@ -40,6 +38,12 @@ public class TopicController {
 
     @PutMapping("/{id}")
     public TopicResponseDto update(@PathVariable @Min(1) Long id, @Valid @RequestBody TopicUpdateDto dto) {
-        return  topicService.update(id, dto);
+        return topicService.update(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable @Min(1) Long id) {
+        topicService.delete(id);
     }
 }

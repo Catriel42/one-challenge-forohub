@@ -15,11 +15,9 @@ import com.catodev.onechallengeforum.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +44,7 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     public Page<TopicResponseDto> findAll(Pageable pageable) {
-        return topicRepository.findAll(pageable)
+        return topicRepository.findByStatus("ACTIVE", pageable)
                 .map(topicMapper::toDTO);
     }
 
@@ -69,5 +67,13 @@ public class TopicServiceImpl implements TopicService {
             topic.setMessage(dto.message());
         }
         return topicMapper.toDTO(topic);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Topic topic = topicRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + id));
+        topic.setStatus("DELETED");
     }
 }
