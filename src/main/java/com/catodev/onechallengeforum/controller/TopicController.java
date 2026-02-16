@@ -3,7 +3,7 @@ package com.catodev.onechallengeforum.controller;
 import com.catodev.onechallengeforum.dto.topic.TopicCreateDto;
 import com.catodev.onechallengeforum.dto.topic.TopicResponseDto;
 import com.catodev.onechallengeforum.dto.topic.TopicUpdateDto;
-import com.catodev.onechallengeforum.service.TopicService;
+import com.catodev.onechallengeforum.service.topic.TopicService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;

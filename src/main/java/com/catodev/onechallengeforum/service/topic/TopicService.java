@@ -1,4 +1,4 @@
-package com.catodev.onechallengeforum.service;
+package com.catodev.onechallengeforum.service.topic;
 
 import com.catodev.onechallengeforum.dto.topic.TopicCreateDto;
 import com.catodev.onechallengeforum.dto.topic.TopicResponseDto;
