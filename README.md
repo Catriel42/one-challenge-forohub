@@ -1,79 +1,121 @@
-# One Challenge Forum - API REST
+# One Challenge Forum
 
 ![Java](https://img.shields.io/badge/Java_25-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot_4-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
 ![Postgres](https://img.shields.io/badge/Postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Flyway](https://img.shields.io/badge/Flyway-%23CC0200.svg?style=for-the-badge&logo=flyway&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring_Security-%236DB33F.svg?style=for-the-badge&logo=springsecurity&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 
-Este proyecto es una solucion backend para el desafio "Foro Hub" de Oracle Next Education (ONE) y Alura. Consiste en una API RESTful desarrollada con **Spring Boot** para gestionar topicos de discusion, implementando las mejores practicas de desarrollo, persistencia de datos y seguridad.
+Este proyecto es una solución backend para el desafío "Foro Hub" de Oracle Next Education (ONE) y Alura. Consiste en una API RESTful desarrollada con **Spring Boot** para gestionar tópicos de discusión, implementando las mejores prácticas de desarrollo, persistencia de datos y **seguridad robusta**.
 
-## Tecnologias
+## Tecnologías
 
-*   **Java 25** (Compatible con versiones LTS recientes como 21)
+*   **Java 25** (Compatible con versiones recientes)
 *   **Spring Boot 4**
+*   **Spring Security 6+** (Autenticación y Autorización)
+*   **JWT (JSON Web Tokens)** (Seguridad Stateless)
 *   **Spring Data JPA** (Hibernate)
-*   **PostgreSQL** (Base de datos)
+*   **PostgreSQL** (Infrasctructura de Datos)
 *   **Flyway** (Migraciones de base de datos)
-*   **Spring Security** (Autenticacion y Autorizacion)
-*   **Lombok** (Reduccion de boilerplate)
+*   **Lombok** (Reducción de boilerplate)
 *   **MapStruct** (Mapeo eficiente de Entidades <-> DTOs)
-*   **Validation** (Bean Validation estandar)
 
-## Configuracion del Entorno
+## Configuración del Entorno
 
-Para ejecutar la aplicacion, es necesario configurar las siguientes **variables de entorno** en tu sistema o IDE. Estas variables son utilizadas por el perfil de desarrollo (`dev`).
+Para ejecutar la aplicación, define las siguientes variables de entorno:
 
-| Variable | Descripcion | Ejemplo |
+| Variable | Descripción | Ejemplo |
 | :--- | :--- | :--- |
-| `DEV_DB_URL` | URL de conexion a PostgreSQL | `jdbc:postgresql://localhost:5432/foro_hub` |
+| `DEV_DB_URL` | URL de conexión a PostgreSQL | `jdbc:postgresql://localhost:5432/foro_hub` |
 | `DEV_DB_USERNAME` | Usuario de la base de datos | `postgres` |
-| `DEV_DB_PASSWORD` | Contrasena del usuario | `admin123` |
-
-> **Nota:** La aplicacion utiliza Flyway, por lo que las tablas se crearan automaticamente al iniciar si la base de datos existe.
-
-## Como Ejecutar
-
-### Usando Maven
-Puedes ejecutar la aplicacion directamente desde la terminal con Maven:
-
-```bash
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-```
-
-### Usando JAR
-Si prefieres empaquetar y ejecutar:
-
-```bash
-./mvnw clean package
-java -jar target/one-challenge-forum-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev
-```
+| `DEV_DB_PASSWORD` | Contraseña del usuario | `admin123` |
+| `JWT_SECRET` | Clave secreta para firmar tokens | `mi_super_secreto_123` |
 
 ## Endpoints Principales
 
-La API expone los siguientes recursos bajo el path base `/topics` (o configurado en properties).
+### Autenticación (Públicos)
+| Método | Endpoint | Descripción | Body Requerido |
+| :--- | :--- | :--- | :--- |
+| **POST** | `/auth/register` | **Registrar Usuario**. Crea un nuevo usuario con rol `ROLE_STUDENT`. | `{ "name": "...", "email": "...", "password": "..." }` |
+| **POST** | `/auth/login` | **Iniciar Sesión**. Devuelve un JWT válido por 2 horas. | `{ "email": "...", "password": "..." }` |
 
-| Metodo | Endpoint | Descripcion |
+### Tópicos (Protegidos - Requieren Bearer Token)
+Todo request a estos endpoints debe incluir el header: `Authorization: Bearer <tu_token>`
+
+| Método | Endpoint | Descripción |
 | :--- | :--- | :--- |
-| **POST** | `/topics` | **Crear Topico**. Requiere titulo, mensaje, autor y curso. Valida duplicados. |
-| **GET** | `/topics` | **Listar Topicos**. Retorna lista paginada de topicos activos. Filtra los eliminados. |
-| **GET** | `/topics/{id}` | **Detalle Topico**. Obtiene la informacion completa de un topico por su ID. |
-| **PUT** | `/topics/{id}` | **Actualizar Topico**. Actualiza titulo o mensaje. Transaccional. |
-| **DELETE** | `/topics/{id}` | **Eliminar Topico (Logico)**. Cambia el estado a `DELETED`. |
+| **POST** | `/topics` | **Crear Tópico**. Requiere título, mensaje, autor y curso. Valida duplicados. |
+| **GET** | `/topics` | **Listar Tópicos**. Retorna lista paginada de tópicos activos. |
+| **GET** | `/topics/{id}` | **Detalle Tópico**. Obtiene la información completa de un tópico por su ID. |
+| **PUT** | `/topics/{id}` | **Actualizar Tópico**. Actualiza título o mensaje de forma transaccional. |
+| **DELETE** | `/topics/{id}` | **Eliminar Tópico (Lógico)**. Cambia el estado a `DELETED`. |
 
-## Caracteristicas Clave
+## Arquitectura y Diseño (Diagrama de Clases)
 
-*   **Soft Delete**: Los registros no se borran fisicamente de la base de datos; cambian su estado a `DELETED` para mantener integridad referencial y auditoria.
-*   **Validaciones**:
-    *   **Formato**: `DTO` con `@NotBlank`, `@NotNull`.
-    *   **Negocio**: Reglas de unicidad (no duplicados) validadas en la capa de Servicio.
-*   **Transaccionalidad**: Uso de `@Transactional` para garantizar atomicidad en operaciones de modificacion (`create`, `update`, `delete`).
-*   **Mappers**: Conversion limpia entre DTOs y Entidades usando MapStruct.
+El sistema sigue una arquitectura en capas con separación de responsabilidades para la seguridad.
 
-## Contribucion
+```mermaid
+classDiagram
+    class AuthController {
+        +register(RegisterUserDto)
+        +login(LoginUserDto)
+    }
 
-Este proyecto sigue la convencion de **Conventional Commits** para el historial de cambios:
+    class AuthenticationService {
+        +register(RegisterUserDto)
+        +login(LoginUserDto): JwtTokenDto
+    }
+
+    class UserDetailsServiceImpl {
+        +loadUserByUsername(String): UserDetails
+    }
+
+    class TokenService {
+        +generateToken(User): String
+        +getSubject(String): String
+    }
+
+    class SecurityFilter {
+        +doFilterInternal(Request, Response, Chain)
+    }
+
+    class UserRepository {
+        +findByEmail(String): Optional<User>
+    }
+
+    class User {
+        -Long id
+        -String email
+        -String password
+        -Profile profile
+        +getAuthorities()
+    }
+
+    AuthController --> AuthenticationService : uses
+    AuthenticationService --> UserDetailsServiceImpl : decoupled from
+    AuthenticationService --> TokenService : uses
+    AuthenticationService --> UserRepository : uses
+    UserDetailsServiceImpl --> UserRepository : uses
+    SecurityFilter --> TokenService : validates token
+    SecurityFilter --> UserRepository : loads user
+    User ..|> UserDetails : implements
+```
+
+## Seguridad Implementada
+
+1.  **Stateless Authentication**: No se usan sesiones de servidor. Cada petición es validada independientemente vía JWT.
+2.  **Password Encryption**: Todas las contraseñas se almacenan hasheadas con **BCrypt**.
+3.  **Role Based Access Control (RBAC)**: Preparado para manejar roles (`ROLE_ADMIN`, `ROLE_STUDENT`) asociados a cada `User` mediante la entidad `Profile`.
+4.  **Segregación de Interfaces**:
+    *   `AuthenticationService`: Maneja la lógica de negocio (login/registro).
+    *   `UserDetailsServiceImpl`: Maneja la carga técnica de usuarios para Spring Security, rompiendo dependencias circulares.
+
+## Contribución
+
+Este proyecto sigue la convención de **Conventional Commits**:
 *   `feat`: Nueva funcionalidad.
-*   `fix`: Correccion de errores.
-*   `refactor`: Cambios de codigo que no alteran la funcionalidad.
-*   `docs`: Cambios en documentacion.
+*   `fix`: Corrección de errores.
+*   `refactor`: Cambios de código que no alteran la funcionalidad.
+*   `docs`: Cambios en documentación.
+*   `build`: Cambios en dependencias o scripts de construcción.
