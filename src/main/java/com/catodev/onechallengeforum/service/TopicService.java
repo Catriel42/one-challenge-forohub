@@ -2,10 +2,16 @@ package com.catodev.onechallengeforum.service;
 
 import com.catodev.onechallengeforum.dto.topic.TopicCreateDto;
 import com.catodev.onechallengeforum.dto.topic.TopicResponseDto;
+import com.catodev.onechallengeforum.dto.topic.TopicUpdateDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 public interface TopicService {
     TopicResponseDto create(TopicCreateDto dto);
-    List<TopicResponseDto> findAll();
+    Page<TopicResponseDto> findAll(Pageable pageable);
     TopicResponseDto findById(Long id);
+    TopicResponseDto update(Long id, TopicUpdateDto dto);
+
 }

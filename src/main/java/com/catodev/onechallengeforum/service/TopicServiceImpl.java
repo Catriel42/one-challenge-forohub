@@ -2,6 +2,7 @@ package com.catodev.onechallengeforum.service;
 
 import com.catodev.onechallengeforum.dto.topic.TopicCreateDto;
 import com.catodev.onechallengeforum.dto.topic.TopicResponseDto;
+import com.catodev.onechallengeforum.dto.topic.TopicUpdateDto;
 import com.catodev.onechallengeforum.exception.DuplicateResourceException;
 import com.catodev.onechallengeforum.exception.ResourceNotFoundException;
 import com.catodev.onechallengeforum.mapper.TopicMapper;
@@ -12,6 +13,9 @@ import com.catodev.onechallengeforum.repository.CourseRepository;
 import com.catodev.onechallengeforum.repository.TopicRepository;
 import com.catodev.onechallengeforum.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,17 +45,29 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public List<TopicResponseDto> findAll() {
-        return topicRepository.findAll()
-                .stream()
-                .map(topicMapper::toDTO)
-                .toList();
+    public Page<TopicResponseDto> findAll(Pageable pageable) {
+        return topicRepository.findAll(pageable)
+                .map(topicMapper::toDTO);
     }
 
     @Override
     public TopicResponseDto findById(Long id) {
         Topic topic = topicRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + id));
+        return topicMapper.toDTO(topic);
+    }
+
+    @Override
+    @Transactional
+    public TopicResponseDto update(Long id, TopicUpdateDto dto) {
+        Topic topic = topicRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + id));
+        if (dto.title() != null) {
+            topic.setTitle(dto.title());
+        }
+        if (dto.message() != null) {
+            topic.setMessage(dto.message());
+        }
         return topicMapper.toDTO(topic);
     }
 }
