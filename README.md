@@ -21,9 +21,9 @@ Este proyecto es una solución backend para el desafío "Foro Hub" de Oracle Nex
 *   **Lombok** (Reducción de boilerplate)
 *   **MapStruct** (Mapeo eficiente de Entidades <-> DTOs)
 
-## Configuración del Entorno
+## Configuración del Entorno y Ejecución
 
-Para ejecutar la aplicación, define las siguientes variables de entorno:
+Para ejecutar la aplicación, primero define las siguientes variables de entorno (por ejemplo, en un archivo `.env` en la raíz del proyecto):
 
 | Variable | Descripción | Ejemplo |
 | :--- | :--- | :--- |
@@ -31,6 +31,16 @@ Para ejecutar la aplicación, define las siguientes variables de entorno:
 | `DEV_DB_USERNAME` | Usuario de la base de datos | `postgres` |
 | `DEV_DB_PASSWORD` | Contraseña del usuario | `admin123` |
 | `JWT_SECRET` | Clave secreta para firmar tokens | `mi_super_secreto_123` |
+
+### Cómo correr el proyecto (Linux/macOS)
+
+Si usas un entorno basado en Unix y tienes tus variables configuradas en un archivo `.env`, puedes usar este atajo (joyita) para exportar las variables e iniciar el servidor de Spring Boot en un solo comando:
+
+```bash
+export $(cat .env | xargs) && ./mvnw spring-boot:run
+```
+
+Esto cargará la base de datos, ejecutará las migraciones de Flyway y levantará la API en el puerto `8080`.
 
 ## Endpoints Principales
 
@@ -50,6 +60,21 @@ Todo request a estos endpoints debe incluir el header: `Authorization: Bearer <t
 | **GET** | `/topics/{id}` | **Detalle Tópico**. Obtiene la información completa de un tópico por su ID. |
 | **PUT** | `/topics/{id}` | **Actualizar Tópico**. Actualiza título o mensaje de forma transaccional. |
 | **DELETE** | `/topics/{id}` | **Eliminar Tópico (Lógico)**. Cambia el estado a `DELETED`. |
+
+## Documentación de la API (Swagger UI)
+
+Este proyecto integra **Springdoc OpenAPI 3** para la generación automática de la documentación interactiva de la API. Esta interfaz reemplaza la necesidad de usar herramientas externas como Postman para las pruebas manuales.
+
+Para acceder a la documentación interactiva:
+1. Inicia la aplicación.
+2. Navega en tu navegador a: `http://localhost:8080/api/v1/swagger-ui.html`
+
+### Cómo probar Endpoints Protegidos en Swagger
+1. Ve a la sección **Autenticación** y ejecuta el endpoint `POST /auth/login` con tus credenciales.
+2. Copia el `token` (JWT) de la respuesta.
+3. Desplázate hacia arriba y haz clic en el botón verde **Authorize**.
+4. Pega el token y haz clic en "Authorize".
+5. ¡Listo! Ahora todos los endpoints que requieren autenticación enviarán automáticamente el header `Authorization: Bearer <token>`.
 
 ## Arquitectura y Diseño (Diagrama de Clases)
 
