@@ -42,6 +42,10 @@ export $(cat .env | xargs) && ./mvnw spring-boot:run
 
 Esto cargará la base de datos, ejecutará las migraciones de Flyway y levantará la API en el puerto `8080`.
 
+### DEMO
+
+Cato agrega el video aqui
+
 ## Endpoints Principales
 
 ### Autenticación (Públicos)
@@ -82,49 +86,240 @@ El sistema sigue una arquitectura en capas con separación de responsabilidades 
 
 ```mermaid
 classDiagram
-    class AuthController {
-        +register(RegisterUserDto)
-        +login(LoginUserDto)
+    class OneChallengeForumApplication {
+        +main(String[]) void
     }
 
-    class AuthenticationService {
-        +register(RegisterUserDto)
-        +login(LoginUserDto): JwtTokenDto
+    class OpenApiConfig {
+        +customOpenAPI() OpenAPI
     }
 
-    class UserDetailsServiceImpl {
-        +loadUserByUsername(String): UserDetails
-    }
-
-    class TokenService {
-        +generateToken(User): String
-        +getSubject(String): String
+    class SecurityConfig {
+        +securityFilterChain(HttpSecurity, SecurityFilter) SecurityFilterChain
+        +passwordEncoder() PasswordEncoder
+        +authenticationManager(AuthenticationConfiguration) AuthenticationManager
     }
 
     class SecurityFilter {
-        +doFilterInternal(Request, Response, Chain)
+        -tokenService TokenService
+        -userRepository UserRepository
+        #doFilterInternal(HttpServletRequest, HttpServletResponse, FilterChain) void
+        -recoverToken(HttpServletRequest) String
     }
 
-    class UserRepository {
-        +findByEmail(String): Optional<User>
+    class AuthController {
+        -authenticationService AuthenticationService
+        +register(RegisterUserDto) ResponseEntity~Void~
+        +login(LoginUserDto) ResponseEntity~JwtTokenDto~
+    }
+
+    class TopicController {
+        -topicService TopicService
+        +create(TopicCreateDto) TopicResponseDto
+        +findAll(Pageable) Page~TopicResponseDto~
+        +findById(Long) TopicResponseDto
+        +update(Long, TopicUpdateDto) TopicResponseDto
+        +delete(Long) void
+    }
+
+    class JwtTokenDto {
+        <<record>>
+        +token String
+    }
+
+    class LoginUserDto {
+        <<record>>
+        +email String
+        +password String
+    }
+
+    class RegisterUserDto {
+        <<record>>
+        +name String
+        +email String
+        +password String
+    }
+
+    class TopicCreateDto {
+        <<record>>
+        +title String
+        +message String
+        +authorId Long
+        +courseId Long
+    }
+
+    class TopicResponseDto {
+        <<record>>
+        +id Long
+        +title String
+        +message String
+        +creationDate LocalDateTime
+        +status String
+        +authorId Long
+        +authorName String
+        +courseId Long
+        +courseName String
+    }
+
+    class TopicUpdateDto {
+        <<record>>
+        +title String
+        +message String
+    }
+
+    class DuplicateResourceException {
+    }
+
+    class ErrorResponse {
+        <<record>>
+        +status int
+        +message String
+        +timestamp LocalDateTime
+    }
+
+    class GlobalExceptionHandler {
+        +handleNotFound(ResourceNotFoundException)
+        +handleDuplicate(DuplicateResourceException)
+        +handleValidationErrors(MethodArgumentNotValidException)
+        +handleGenericError(Exception)
+    }
+
+    class ResourceNotFoundException {
+    }
+
+    class TopicMapper {
+        <<interface>>
+        +toDTO(Topic) TopicResponseDto
+        +toEntity(TopicCreateDto, User, Course) Topic
+    }
+
+    class Course {
+        -id Long
+        -name String
+        -category String
+    }
+
+    class Profile {
+        -id Long
+        -name String
+    }
+
+    class Response {
+        -id Long
+        -message String
+        -topic Topic
+        -creationDate LocalDateTime
+        -author User
+        -solution Boolean
+    }
+
+    class Topic {
+        -id Long
+        -title String
+        -message String
+        -creationDate LocalDateTime
+        -status String
+        -author User
+        -course Course
     }
 
     class User {
-        -Long id
-        -String email
-        -String password
-        -Profile profile
-        +getAuthorities()
+        -id Long
+        -name String
+        -email String
+        -password String
+        -profile Profile
+        +getAuthorities() Collection
+        +getUsername() String
+        +isAccountNonExpired() boolean
+        +isAccountNonLocked() boolean
+        +isCredentialsNonExpired() boolean
+        +isEnabled() boolean
     }
 
+    class CourseRepository {
+        <<interface>>
+    }
+
+    class ProfileRepository {
+        <<interface>>
+        +findByName(String) Optional~Profile~
+    }
+
+    class TopicRepository {
+        <<interface>>
+        +existsByTitleAndCourseId(String, Long) boolean
+        +findByStatus(String, Pageable) Page~Topic~
+    }
+
+    class UserRepository {
+        <<interface>>
+        +findByEmail(String) Optional~User~
+        +existsByEmail(String) boolean
+    }
+
+    class AuthenticationService {
+        -userRepository UserRepository
+        -profileRepository ProfileRepository
+        -passwordEncoder PasswordEncoder
+        -authenticationManager AuthenticationManager
+        -tokenService TokenService
+        +register(RegisterUserDto) void
+        +login(LoginUserDto) JwtTokenDto
+    }
+
+    class TokenService {
+        -apiSecret String
+        +generateToken(User) String
+        +getSubject(String) String
+    }
+
+    class UserDetailsServiceImpl {
+        -userRepository UserRepository
+        +loadUserByUsername(String) UserDetails
+    }
+
+    class TopicService {
+        <<interface>>
+        +create(TopicCreateDto) TopicResponseDto
+        +findAll(Pageable) Page~TopicResponseDto~
+        +findById(Long) TopicResponseDto
+        +update(Long, TopicUpdateDto) TopicResponseDto
+        +delete(Long) void
+    }
+
+    class TopicServiceImpl {
+        -topicRepository TopicRepository
+        -userRepository UserRepository
+        -courseRepository CourseRepository
+        -topicMapper TopicMapper
+        +create(TopicCreateDto) TopicResponseDto
+        +findAll(Pageable) Page~TopicResponseDto~
+        +findById(Long) TopicResponseDto
+        +update(Long, TopicUpdateDto) TopicResponseDto
+        +delete(Long) void
+    }
+
+    %% Relationships
+    SecurityFilter --> TokenService : uses
+    SecurityFilter --> UserRepository : uses
     AuthController --> AuthenticationService : uses
-    AuthenticationService --> UserDetailsServiceImpl : decoupled from
-    AuthenticationService --> TokenService : uses
+    TopicController --> TopicService : uses
     AuthenticationService --> UserRepository : uses
+    AuthenticationService --> ProfileRepository : uses
+    AuthenticationService --> TokenService : uses
     UserDetailsServiceImpl --> UserRepository : uses
-    SecurityFilter --> TokenService : validates token
-    SecurityFilter --> UserRepository : loads user
-    User ..|> UserDetails : implements
+    TopicServiceImpl ..|> TopicService : implements
+    TopicServiceImpl --> TopicRepository : uses
+    TopicServiceImpl --> UserRepository : uses
+    TopicServiceImpl --> CourseRepository : uses
+    TopicServiceImpl --> TopicMapper : uses
+    
+    User --> Profile : has
+    Topic --> User : author
+    Topic --> Course : has
+    Response --> Topic : belongs to
+    Response --> User : author
 ```
 
 ## Seguridad Implementada
