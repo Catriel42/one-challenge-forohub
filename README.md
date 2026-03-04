@@ -44,7 +44,7 @@ Esto cargará la base de datos, ejecutará las migraciones de Flyway y levantar�
 
 ### DEMO
 
-Cato agrega el video aqui
+https://github.com/user-attachments/assets/68778d0c-20cc-4970-806e-d5a71bd7043c
 
 ## Endpoints Principales
 
